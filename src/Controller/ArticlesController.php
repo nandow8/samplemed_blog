@@ -20,7 +20,11 @@ class ArticlesController extends AppController
 
     public function view($slug)
     {
-        $article = $this->Articles->findBySlug($slug)->firstOrFail();
+        $article = $this->Articles
+            ->findBySlug($slug)
+            ->contain('Tags')
+            ->firstOrFail();
+            $this->set(compact('article'));
         $this->set(compact('article'));
     }
 
@@ -50,7 +54,7 @@ class ArticlesController extends AppController
     {
         $article = $this->Articles
             ->findBySlug($slug)
-            ->contain('Tags') // load associated Tags
+            ->contain('Tags')
             ->firstOrFail();
         if ($this->request->is(['post', 'put'])) {
             $this->Articles->patchEntity($article, $this->request->getData());
@@ -79,5 +83,18 @@ class ArticlesController extends AppController
             $this->Flash->success(__('The {0} article has been deleted.', $article->title));
             return $this->redirect(['action' => 'index']);
         }
+    }
+
+    public function tags(...$tags)
+    {
+        $articles = $this->Articles->find('tagged', [
+                'tags' => $tags
+            ])
+            ->all();
+
+        $this->set([
+            'articles' => $articles,
+            'tags' => $tags
+        ]);
     }
 }
